@@ -1,12 +1,24 @@
 import React, { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
+import { logout } from '../services/axios'; // Importa la función de logout desde el servicio
 
 export function HeaderNav() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const navigate = useNavigate();
 
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
+    };
+
+    const handleLogout = async () => {
+        try {
+            await logout(); // Llama al servicio de logout
+            navigate('/login'); // Redirige al usuario a la página de login
+        } catch (error) {
+            console.error('Logout failed:', error);
+            alert('Error during logout. Please try again.');
+        }
     };
 
     return (
@@ -19,14 +31,13 @@ export function HeaderNav() {
                         </span>
                     </Link>
                     <div className="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
-                        <Link to="/login">
-                            <button
-                                type="button"
-                                className="text-white bg-sky-600 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-                            >
-                                Log out
-                            </button>
-                        </Link>
+                        <button
+                            onClick={handleLogout}
+                            type="button"
+                            className="text-white bg-sky-600 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                        >
+                            Log out
+                        </button>
                         <button
                             onClick={toggleSidebar}
                             type="button"
