@@ -11,15 +11,22 @@ export function HeaderNav() {
         setIsSidebarOpen(!isSidebarOpen);
     };
 
-    const handleLogout = async () => {
-        try {
-            await logout(); // Llama al servicio de logout
-            navigate('/login'); // Redirige al usuario a la página de login
-        } catch (error) {
-            console.error('Logout failed:', error);
-            alert('Error during logout. Please try again.');
-        }
-    };
+    const [logoutMessage, setLogoutMessage] = useState('');
+
+const handleLogout = async () => {
+    try {
+        await logout();
+        localStorage.clear();
+        setLogoutMessage('Sesión cerrada exitosamente. Redirigiendo...');
+        setTimeout(() => navigate('/login')); // Redirige tras 2 segundos
+    } catch (error) {
+        console.error('Logout fallido:', error.response || error);
+        alert('Error al cerrar sesión. Por favor, intenta nuevamente.');
+    }
+};
+
+// En el JSX:
+{logoutMessage && <p className="text-center text-green-500">{logoutMessage}</p>}
 
     return (
         <header>

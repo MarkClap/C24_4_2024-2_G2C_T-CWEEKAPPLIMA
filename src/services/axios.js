@@ -2,8 +2,8 @@
 import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: 'http://localhost:8081', // URL del backend
-  withCredentials: true, // Esto es esencial para manejar cookies automáticamente
+  baseURL: 'http://localhost:8081',
+  withCredentials: true,
 });
 
 export default instance;
@@ -13,7 +13,7 @@ export default instance;
 export const logout = async () => {
   try {
     const response = await instance.post('/api/auth/signout');
-    return response.data; // Maneja la respuesta si es necesario
+    return response.data;
   } catch (error) {
     console.error('Error during logout:', error.response || error);
     throw error;
