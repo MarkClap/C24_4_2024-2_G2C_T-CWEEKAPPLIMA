@@ -1,67 +1,64 @@
 import React, { useState, useEffect } from 'react';
 import { HeaderNav } from '../components/HeaderNav';
-import { Calendar, MapPin, Users, ArrowLeft, Search, X } from 'lucide-react';
+import { Calendar, MapPin, Users, ArrowLeft, Search, X, Edit3 } from 'lucide-react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { getEventById } from '../services/eventservice';
 import { inscriptionService } from '../services/inscriptionservice';
 
-export function EventDetailsPage() {
+export function EventDetailsOrganizadorPage() {
     const [eventDetails, setEventDetails] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [participants, setParticipants] = useState([]);
-    const [userInscriptionId, setUserInscriptionId] = useState(null);
+    const navigate = useNavigate();
 
     const { eventId } = useParams();
-    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchEventDetails = async () => {
             try {
+                setLoading(true);
+
+                // Obtener detalles del evento
                 const event = await getEventById(eventId);
                 setEventDetails(event);
 
+                // Obtener todas las inscripciones
                 const allInscriptions = await inscriptionService.getAllInscriptions();
+
+                // Filtrar participantes por nombre del evento
                 const filteredParticipants = allInscriptions.filter(
                     inscription => inscription.eventName === event.name
                 );
 
                 setParticipants(filteredParticipants);
-
-                const userInscription = filteredParticipants.find(
-                    inscription => inscription.username === 'currentUsername'
-                );
-
-                if (userInscription) {
-                    setUserInscriptionId(userInscription.id);
-                } else {
-                    console.log('No inscription found for the current user.');
-                }
             } catch (err) {
                 setError(err.message || 'Failed to load event details.');
                 console.error('Error fetching event details:', err);
+            } finally {
+                setLoading(false);
             }
         };
 
         fetchEventDetails();
     }, [eventId]);
 
+    // Filtrar participantes según el término de búsqueda
     const filteredParticipants = participants.filter(participant =>
         participant.username.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const handleCancelInscription = async (id) => {
-        try {
-            const response = await inscriptionService.deleteInscription(id);
-            console.log('Inscription cancelled:', response);
-            setParticipants(prevParticipants =>
-                prevParticipants.filter(participant => participant.id !== id)
-            );
-            navigate('/events');
-        } catch (error) {
-            console.error('Error cancelling inscription:', error);
-        }
-    };
+    if (loading) {
+        return (
+            <>
+                <HeaderNav />
+                <div className="container mx-auto px-4 pt-20 text-center">
+                    <p>Loading event details...</p>
+                </div>
+            </>
+        );
+    }
 
     if (error) {
         return (
@@ -81,37 +78,47 @@ export function EventDetailsPage() {
         <>
             <HeaderNav />
             <div className="container mx-auto px-4 pt-20">
-                <Link to="/events" className="flex items-center text-gray-600 hover:text-gray-900 mb-6">
+                <Link to="/organizador/events" className="flex items-center text-gray-600 hover:text-gray-900 mb-6">
                     <ArrowLeft className="mr-2" /> Back to Events
                 </Link>
 
                 <div className="grid md:grid-cols-2 gap-8">
+                    {/* Imagen del Evento */}
                     <div>
                         <div className="rounded-xl overflow-hidden shadow-lg">
                             <img
-                                src={eventDetails?.imgEvent || "https://via.placeholder.com/600x400"}
-                                alt={eventDetails?.name}
+                                src={eventDetails.imgEvent || "https://via.placeholder.com/600x400"}
+                                alt={eventDetails.name}
                                 className="w-full h-96 object-cover"
                             />
                         </div>
                     </div>
 
+                    {/* Detalles del Evento */}
                     <div>
-                        <h1 className="text-4xl font-bold mb-4">{eventDetails?.name}</h1>
+                        <div className="flex justify-between items-center mb-6">
+                            <h1 className="text-4xl font-bold">{eventDetails.name}</h1>
+                            <button
+                                onClick={() => navigate(`/organizador/events/update/${eventId}`)}
+                                className="flex items-center bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600"
+                            >
+                                <Edit3 className="mr-2" size={20} /> Update
+                            </button>
+                        </div>
 
                         <div className="space-y-4 mb-6">
                             <div className="flex items-center">
                                 <Calendar className="mr-3 text-blue-500" />
-                                <span className="text-lg">{eventDetails?.startDate} - {eventDetails?.endDate}</span>
+                                <span className="text-lg">{eventDetails.startDate} - {eventDetails.endDate}</span>
                             </div>
                             <div className="flex items-center">
                                 <MapPin className="mr-3 text-red-500" />
-                                <span className="text-lg">{eventDetails?.place}</span>
+                                <span className="text-lg">{eventDetails.place}</span>
                             </div>
                         </div>
 
                         <h2 className="text-2xl font-semibold mb-3">Event Description</h2>
-                        <p className="text-gray-600 mb-6">{eventDetails?.description}</p>
+                        <p className="text-gray-600 mb-6">{eventDetails.description}</p>
 
                         <div className="bg-gray-100 p-6 rounded-xl">
                             <div className="flex justify-between items-center mb-4">
@@ -123,6 +130,7 @@ export function EventDetailsPage() {
                                     </span>
                                 </h2>
 
+                                {/* Barra de búsqueda */}
                                 <div className="relative">
                                     <input
                                         type="text"
@@ -156,16 +164,6 @@ export function EventDetailsPage() {
                                             <tr key={participant.id} className="border-b last:border-b-0">
                                                 <td className="py-2">{participant.username}</td>
                                                 <td className="py-2">{participant.fecha_Inscripcion}</td>
-                                                <td className="py-2">
-                                                    {participant.username === 'superuser2' && (
-                                                        <button
-                                                            onClick={() => handleCancelInscription(participant.id)}
-                                                            className="text-red-500 hover:text-red-700"
-                                                        >
-                                                            Cancel
-                                                        </button>
-                                                    )}
-                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -185,4 +183,4 @@ export function EventDetailsPage() {
     );
 }
 
-export default EventDetailsPage;
+export default EventDetailsOrganizadorPage;

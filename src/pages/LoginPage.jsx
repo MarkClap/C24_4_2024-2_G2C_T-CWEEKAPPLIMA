@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import axios from '../services/axios' 
+import axios from '../services/config' 
 import logo from '../assets/img/testfront.jpg'
 
 export function LoginPage() {
@@ -41,7 +41,7 @@ export function LoginPage() {
             } else if (roles.includes('ROLE_ORGANIZADOR')) {
                 navigate('/organizador/events')
             } else if (roles.includes('ROLE_JURADO')) {
-                navigate('/jurado/evaluations')
+                navigate('/jurado/events')
             } else {
                 navigate('/events')
             }

@@ -1,26 +1,47 @@
-import axios from './axios';
+// inscriptionService.js
+import instance from './config';
 
-const createInscription = async (eventId) => {
+export const inscriptionService = {
+  getAllInscriptions: async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      console.log('Token:', token); // Verifica si el token está presente
-  
-      if (!token) {
-        throw new Error('No estás autenticado');
-      }
-  
-      const response = await axios.post('/api/inscriptions/add', {
-        eventId: eventId
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-  
-      return response.data; // Exitoso
+      const response = await instance.get('/api/inscriptions/all');
+      return response.data;
     } catch (error) {
-      console.error('Error en la inscripción:', error.response?.data || error.message || error);
-      throw error.response?.data || 'Error al inscribirse';
+      console.error('Error fetching all inscriptions:', error.response || error);
+      throw error;
     }
-  };
-  
+  },
+
+  getUserInscriptions: async () => {
+    try {
+      const response = await instance.get('/api/inscriptions/user-inscriptions');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user inscriptions:', error.response || error);
+      throw error;
+    }
+  },
+
+  createInscription: async (eventId) => {
+    try {
+      const response = await instance.post('/api/inscriptions/add', { eventId });
+      return response.data;
+    } catch (error) {
+      console.error('Error creating inscription:', error.response || error);
+      throw error;
+    }
+  },
+
+  // Delete a specific inscription
+  deleteInscription: async (inscriptionId) => {
+    try {
+      const response = await instance.delete(`/api/inscriptions/delete/${inscriptionId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting inscription:', error.response || error);
+      throw error;
+    }
+  }
+};
+
+export default inscriptionService;

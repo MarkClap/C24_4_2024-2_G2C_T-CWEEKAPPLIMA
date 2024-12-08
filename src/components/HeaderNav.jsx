@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
-import { logout } from '../services/axios'; // Importa la función de logout desde el servicio
+import { logout } from '../services/config'; // Importa la función de logout desde el servicio
 
 export function HeaderNav() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -87,7 +87,7 @@ const handleLogout = async () => {
                             </li>
                             <li>
                                 <NavLink
-                                    to="/idk"
+                                    to="/score"
                                     className={({ isActive }) =>
                                         `block py-2 px-3 rounded ${
                                             isActive
@@ -96,7 +96,7 @@ const handleLogout = async () => {
                                         }`
                                     }
                                 >
-                                    IDK
+                                    Score
                                 </NavLink>
                             </li>
                         </ul>
