@@ -1,69 +1,77 @@
-import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import axios from '../services/config' 
-import logo from '../assets/img/testfront.jpg'
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from '../services/config'; 
+import logo from '../assets/img/tecsupFondo.jpg';
+import background from '../assets/img/fondoTecsup.png'; // Importa la imagen de fondo
 
 export function LoginPage() {
-    const [username, setUsername] = useState('')
-    const [password, setPassword] = useState('')
-    const [showPassword, setShowPassword] = useState(false)
-    const [error, setError] = useState('')
-    const navigate = useNavigate()
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
 
     // Check if the user is already logged in
     useEffect(() => {
-        const user = localStorage.getItem('user')
+        const user = localStorage.getItem('user');
         if (user) {
-            navigate('/events') // Redirect to events if the session is active
+            navigate('/events'); // Redirect to events if the session is active
         }
-    }, [navigate])
+    }, [navigate]);
 
     const handleLogin = async (e) => {
-        e.preventDefault()
+        e.preventDefault();
         try {
             const response = await axios.post('/api/auth/signin', { 
                 username, 
                 password 
             }, { 
                 withCredentials: true
-            })
+            });
 
             localStorage.setItem('user', JSON.stringify({
                 id: response.data.id,
                 username: response.data.username,
                 email: response.data.email,
                 roles: response.data.roles
-            }))
+            }));
 
-            const roles = response.data.roles
+            const roles = response.data.roles;
             if (roles.includes('ROLE_ADMIN')) {
-                navigate('/admin/dashboard')
+                navigate('/admin/dashboard');
             } else if (roles.includes('ROLE_ORGANIZADOR')) {
-                navigate('/organizador/events')
+                navigate('/organizador/events');
             } else if (roles.includes('ROLE_JURADO')) {
-                navigate('/jurado/events')
+                navigate('/jurado/events');
             } else {
-                navigate('/events')
+                navigate('/events');
             }
         } catch (error) {
             if (error.response) {
-                setError(error.response.data.message || 'Invalid credentials')
+                setError(error.response.data.message || 'Invalid credentials');
             } else if (error.request) {
-                setError('No response from server. Please try again.')
+                setError('No response from server. Please try again.');
             } else {
-                setError('Error logging in. Please try again.')
+                setError('Error logging in. Please try again.');
             }
-            console.error('Login Error:', error)
+            console.error('Login Error:', error);
         }
-    }
+    };
 
     const handleGoogleLogin = () => {
-        alert('Google Login not implemented yet')
-    }
+        alert('Google Login not implemented yet');
+    };
 
     return (
-        <section className="min-h-screen flex items-center justify-center px-4 py-10">
-            <div className="bg-gray-100 flex rounded-2xl shadow-2xl max-w-4xl w-full p-8">
+        <section 
+            className="min-h-screen flex items-center justify-center px-4 py-10 bg-cover bg-center relative"
+            style={{ backgroundImage: `url(${background})` }}
+        >
+            {/* Superposición turquesa */}
+            <div className="absolute inset-0 bg-sky-400 bg-opacity-50"></div>
+
+            {/* Contenido principal */}
+            <div className="relative bg-gray-100 bg-opacity-90 flex rounded-2xl shadow-2xl max-w-4xl w-full p-8">
                 <div className="sm:w-1/2 px-12 flex flex-col justify-center">
                     <h2 className="font-bold text-3xl text-sky-400 mb-4">Login</h2>
                     <p className="text-base text-gray-600 mb-6">If you are already a member, easily log in</p>
@@ -150,5 +158,5 @@ export function LoginPage() {
                 </div>
             </div>
         </section>
-    )
+    );
 }
