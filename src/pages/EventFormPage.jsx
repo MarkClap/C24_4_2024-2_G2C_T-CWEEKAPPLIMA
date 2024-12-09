@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { addEvent } from "../services/eventservice";
 import { HeaderNav } from "../components/HeaderNav";
+import { ArrowLeft } from "lucide-react";
 
 export function EventFormPage() {
   const navigate = useNavigate();
@@ -9,161 +10,181 @@ export function EventFormPage() {
     name: "",
     description: "",
     place: "",
-    startDate: "", // Cambié start_date por startDate
-    endDate: "", // Cambié end_date por endDate
+    startDate: "",
+    endDate: "",
     maxParticipantsGroup: "",
     imgEvent: "",
   });
 
-  const [error, setError] = useState(null);
+  const [alert, setAlert] = useState({ message: "", type: "", visible: false });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
+  const showAlert = (message, type) => {
+    setAlert({ message, type, visible: true });
+    setTimeout(() => {
+      setAlert({ ...alert, visible: false });
+    }, 3000);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (new Date(formData.startDate) > new Date(formData.endDate)) {
-      // Cambié start_date por startDate
-      setError("La fecha de inicio no puede ser posterior a la fecha de fin.");
+      showAlert("La fecha de inicio no puede ser posterior a la fecha de fin.", "error");
       return;
     }
     try {
-      const successMessage = await addEvent(formData);
-      alert("Evento creado exitosamente");
-
-      navigate("/organizador/events"); // Redirige a la lista de eventos
+      await addEvent(formData);
+      showAlert("Evento creado exitosamente", "success");
+      setTimeout(() => navigate("/organizador/events"), 3000);
     } catch (err) {
       console.error(err);
-      setError(
-        err.response?.data?.message || "Error inesperado. Inténtalo más tarde."
+      showAlert(
+        err.response?.data?.message || "Error inesperado. Inténtalo más tarde.",
+        "error"
       );
     }
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-gray-100">
       <HeaderNav />
-      <div className="container mx-auto px-4 pt-20">
-        <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg">
-          <h1 className="text-3xl font-bold text-center mb-6">
+      <div className="container mx-auto px-6 pt-28">
+        {/* Botón de volver y título */}
+        <div className="flex justify-between items-center mb-10">
+          <button
+            onClick={() => navigate("/organizador/events")}
+            className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition duration-200 transform hover:scale-105"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Regresar
+          </button>
+          <h1 className="text-5xl font-extrabold text-gray-800 text-center flex-grow -translate-x-6">
             Crear Nuevo Evento
           </h1>
-          {error && <p className="text-center text-red-500 mb-4">{error}</p>}
-          <form onSubmit={handleSubmit} className="space-y-6">
+        </div>
+
+        {/* Alerta */}
+        {alert.visible && (
+          <div
+            className={`fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-md text-white transition-all duration-500 transform ${
+              alert.visible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
+            } ${
+              alert.type === "success" ? "bg-green-500" : "bg-red-500"
+            }`}
+          >
+            {alert.message}
+          </div>
+        )}
+
+        {/* Formulario */}
+        <div className="w-full max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-lg hover:shadow-2xl transition duration-300">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="name" className="block text-lg font-medium">
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
                 Nombre del Evento
               </label>
               <input
                 type="text"
-                id="name"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-green-300"
-                required
+                className="w-full p-3 border rounded-lg shadow-sm transition-all duration-300 focus:ring-2 focus:ring-blue-500 focus:shadow-md focus:border-blue-500"
+                placeholder="Ingresa el nombre del evento"
               />
             </div>
             <div>
-              <label
-                htmlFor="description"
-                className="block text-lg font-medium"
-              >
-                Descripción
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-green-300"
-                rows="4"
-              ></textarea>
-            </div>
-            <div>
-              <label htmlFor="place" className="block text-lg font-medium">
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
                 Lugar
               </label>
               <input
                 type="text"
-                id="place"
                 name="place"
                 value={formData.place}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-green-300"
-                required
+                className="w-full p-3 border rounded-lg shadow-sm transition-all duration-300 focus:ring-2 focus:ring-blue-500 focus:shadow-md focus:border-blue-500"
+                placeholder="Ingresa el lugar del evento"
               />
             </div>
-
+            <div className="col-span-2">
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Descripción
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                className="w-full p-3 border rounded-lg shadow-sm transition-all duration-300 focus:ring-2 focus:ring-blue-500 focus:shadow-md focus:border-blue-500"
+                placeholder="Agrega una descripción del evento"
+                rows={4}
+              />
+            </div>
             <div>
-              <label htmlFor="startDate" className="block text-lg font-medium">
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
                 Fecha de Inicio
               </label>
               <input
                 type="date"
-                id="startDate" // Cambié start_date por startDate
-                name="startDate" // Cambié start_date por startDate
-                value={formData.startDate} // Cambié start_date por startDate
+                name="startDate"
+                value={formData.startDate}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-green-300"
-                required
+                className="w-full p-3 border rounded-lg shadow-sm transition-all duration-300 focus:ring-2 focus:ring-blue-500 focus:shadow-md focus:border-blue-500"
               />
             </div>
             <div>
-              <label htmlFor="endDate" className="block text-lg font-medium">
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
                 Fecha de Fin
               </label>
               <input
                 type="date"
-                id="endDate" // Cambié end_date por endDate
-                name="endDate" // Cambié end_date por endDate
-                value={formData.endDate} // Cambié end_date por endDate
+                name="endDate"
+                value={formData.endDate}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-green-300"
-                required
+                className="w-full p-3 border rounded-lg shadow-sm transition-all duration-300 focus:ring-2 focus:ring-blue-500 focus:shadow-md focus:border-blue-500"
               />
             </div>
-
             <div>
-              <label
-                htmlFor="max_participants_group"
-                className="block text-lg font-medium"
-              >
-                Máximo de Participantes por Grupo
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Máximo de Participantes
               </label>
               <input
                 type="number"
-                id="max_participants_group"
-                name="max_participants_group"
-                value={formData.max_participants_group}
+                name="maxParticipantsGroup"
+                value={formData.maxParticipantsGroup}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-green-300"
-                required
+                className="w-full p-3 border rounded-lg shadow-sm transition-all duration-300 focus:ring-2 focus:ring-blue-500 focus:shadow-md focus:border-blue-500"
+                placeholder="Máximo de participantes"
               />
             </div>
             <div>
-              <label htmlFor="img_event" className="block text-lg font-medium">
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
                 URL de la Imagen
               </label>
               <input
                 type="text"
-                id="imgEvent"
                 name="imgEvent"
+                value={formData.imgEvent}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-green-300"
+                className="w-full p-3 border rounded-lg shadow-sm transition-all duration-300 focus:ring-2 focus:ring-blue-500 focus:shadow-md focus:border-blue-500"
+                placeholder="Ingresa la URL de la imagen"
               />
             </div>
-            <button
-              type="submit"
-              className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-colors"
-            >
-              Crear Evento
-            </button>
+            <div className="col-span-2">
+              <button
+                type="submit"
+                className="w-full bg-green-500 text-white text-lg font-bold py-3 rounded-lg hover:bg-green-600 transition duration-200 transform hover:scale-105"
+              >
+                Crear Evento
+              </button>
+            </div>
           </form>
         </div>
       </div>
-    </>
+    </div>
   );
 }
+
+export default EventFormPage;

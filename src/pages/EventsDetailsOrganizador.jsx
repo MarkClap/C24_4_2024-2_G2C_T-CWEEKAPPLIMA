@@ -15,19 +15,21 @@ export function EventDetailsOrganizadorPage() {
 
     const { eventId } = useParams();
 
+    const today = new Date();
+    const closingDate = new Date(today);
+    closingDate.setDate(today.getDate() + 7);
+
+    const formatDate = (date) => date.toISOString().split('T')[0];
+
     useEffect(() => {
         const fetchEventDetails = async () => {
             try {
                 setLoading(true);
 
-                // Obtener detalles del evento
                 const event = await getEventById(eventId);
                 setEventDetails(event);
 
-                // Obtener todas las inscripciones
                 const allInscriptions = await inscriptionService.getAllInscriptions();
-
-                // Filtrar participantes por nombre del evento
                 const filteredParticipants = allInscriptions.filter(
                     inscription => inscription.eventName === event.name
                 );
@@ -44,7 +46,6 @@ export function EventDetailsOrganizadorPage() {
         fetchEventDetails();
     }, [eventId]);
 
-    // Filtrar participantes según el término de búsqueda
     const filteredParticipants = participants.filter(participant =>
         participant.username.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -53,8 +54,8 @@ export function EventDetailsOrganizadorPage() {
         return (
             <>
                 <HeaderNav />
-                <div className="container mx-auto px-4 pt-20 text-center">
-                    <p>Loading event details...</p>
+                <div className="container mx-auto px-4 pt-28 text-center">
+                    <p className="text-2xl">Loading event details...</p>
                 </div>
             </>
         );
@@ -64,9 +65,9 @@ export function EventDetailsOrganizadorPage() {
         return (
             <>
                 <HeaderNav />
-                <div className="container mx-auto px-4 pt-20 text-center text-red-500">
-                    <p>Error: {error}</p>
-                    <Link to="/events" className="text-blue-500 hover:underline">
+                <div className="container mx-auto px-4 pt-28 text-center text-red-500">
+                    <p className="text-2xl">Error: {error}</p>
+                    <Link to="/events" className="text-blue-500 hover:underline text-lg">
                         Back to Events
                     </Link>
                 </div>
@@ -77,75 +78,75 @@ export function EventDetailsOrganizadorPage() {
     return (
         <>
             <HeaderNav />
-            <div className="container mx-auto px-4 pt-20">
-                <Link to="/organizador/events" className="flex items-center text-gray-600 hover:text-gray-900 mb-6">
-                    <ArrowLeft className="mr-2" /> Back to Events
-                </Link>
+            <div className="container mx-auto px-4 pt-28">
+                <div className="flex justify-between items-center mb-6">
+                    <Link
+                        to="/organizador/events"
+                        className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-blue-600 focus:ring-2 focus:ring-blue-300 transition duration-200"
+                    >
+                        <ArrowLeft className="w-5 h-5" />
+                        Back to Events
+                    </Link>
+                    <button
+                        onClick={() => navigate(`/organizador/events/update/${eventId}`)}
+                        className="flex items-center gap-2 bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-yellow-600 focus:ring-2 focus:ring-yellow-300 transition duration-200"
+                    >
+                        <Edit3 className="w-5 h-5" />
+                        Update
+                    </button>
+                </div>
 
-                <div className="grid md:grid-cols-2 gap-8">
-                    {/* Imagen del Evento */}
-                    <div>
-                        <div className="rounded-xl overflow-hidden shadow-lg">
-                            <img
-                                src={eventDetails.imgEvent || "https://via.placeholder.com/600x400"}
-                                alt={eventDetails.name}
-                                className="w-full h-96 object-cover"
-                            />
-                        </div>
+                <div className="grid md:grid-cols-2 gap-10 bg-white p-8 rounded-lg shadow-lg">
+                    <div className="rounded-xl overflow-hidden shadow-lg">
+                        <img
+                            src={eventDetails?.imgEvent || "https://via.placeholder.com/600x400"}
+                            alt={eventDetails?.name}
+                            className="w-full h-full object-cover"
+                        />
                     </div>
 
-                    {/* Detalles del Evento */}
                     <div>
-                        <div className="flex justify-between items-center mb-6">
-                            <h1 className="text-4xl font-bold">{eventDetails.name}</h1>
-                            <button
-                                onClick={() => navigate(`/organizador/events/update/${eventId}`)}
-                                className="flex items-center bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600"
-                            >
-                                <Edit3 className="mr-2" size={20} /> Update
-                            </button>
-                        </div>
-
-                        <div className="space-y-4 mb-6">
+                        <h1 className="text-5xl font-extrabold mb-6 text-gray-800">{eventDetails?.name}</h1>
+                        <div className="space-y-4 mb-6 text-gray-600">
                             <div className="flex items-center">
-                                <Calendar className="mr-3 text-blue-500" />
-                                <span className="text-lg">{eventDetails.startDate} - {eventDetails.endDate}</span>
+                                <Calendar className="mr-3 text-blue-500 w-6 h-6" />
+                                <span className="text-xl font-medium">Start Date: {formatDate(today)}</span>
                             </div>
                             <div className="flex items-center">
-                                <MapPin className="mr-3 text-red-500" />
-                                <span className="text-lg">{eventDetails.place}</span>
+                                <Calendar className="mr-3 text-red-500 w-6 h-6" />
+                                <span className="text-xl font-medium">Closing Date: {formatDate(closingDate)}</span>
+                            </div>
+                            <div className="flex items-center">
+                                <MapPin className="mr-3 text-green-500 w-6 h-6" />
+                                <span className="text-xl font-medium">{eventDetails?.place}</span>
                             </div>
                         </div>
-
-                        <h2 className="text-2xl font-semibold mb-3">Event Description</h2>
-                        <p className="text-gray-600 mb-6">{eventDetails.description}</p>
-
+                        <h2 className="text-3xl font-bold mb-3 text-gray-800">Event Description</h2>
+                        <p className="text-gray-700 mb-6 text-lg leading-relaxed">{eventDetails?.description}</p>
                         <div className="bg-gray-100 p-6 rounded-xl">
                             <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-2xl font-semibold flex items-center">
-                                    <Users className="mr-3 text-green-500" />
+                                <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+                                    <Users className="mr-3 text-green-500 w-6 h-6" />
                                     Registered Participants
-                                    <span className="ml-2 bg-green-500 text-white rounded-full px-2 py-1 text-sm">
+                                    <span className="ml-2 bg-green-500 text-white rounded-full px-3 py-1 text-lg">
                                         {filteredParticipants.length}
                                     </span>
                                 </h2>
-
-                                {/* Barra de búsqueda */}
                                 <div className="relative">
                                     <input
                                         type="text"
                                         placeholder="Search participants..."
-                                        className="pl-10 pr-10 py-2 rounded-lg border w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="pl-10 pr-10 py-2 rounded-lg border w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-6 h-6" />
                                     {searchTerm && (
                                         <button
                                             onClick={() => setSearchTerm('')}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 w-6 h-6"
                                         >
-                                            <X size={20} />
+                                            <X />
                                         </button>
                                     )}
                                 </div>
@@ -154,16 +155,16 @@ export function EventDetailsOrganizadorPage() {
                             <div className="max-h-64 overflow-y-auto">
                                 <table className="w-full">
                                     <thead>
-                                        <tr className="border-b">
-                                            <th className="text-left py-2">Username</th>
-                                            <th className="text-left py-2">Registration Date</th>
+                                        <tr className="border-b text-left">
+                                            <th className="py-3 px-4 font-medium text-gray-600 text-lg">Username</th>
+                                            <th className="py-3 px-4 font-medium text-gray-600 text-lg">Registration Date</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {filteredParticipants.map(participant => (
-                                            <tr key={participant.id} className="border-b last:border-b-0">
-                                                <td className="py-2">{participant.username}</td>
-                                                <td className="py-2">{participant.fecha_Inscripcion}</td>
+                                            <tr key={participant.id} className="border-b hover:bg-gray-50 text-lg">
+                                                <td className="py-3 px-4 text-gray-700">{participant.username}</td>
+                                                <td className="py-3 px-4 text-gray-700">{participant.fecha_Inscripcion}</td>
                                             </tr>
                                         ))}
                                     </tbody>

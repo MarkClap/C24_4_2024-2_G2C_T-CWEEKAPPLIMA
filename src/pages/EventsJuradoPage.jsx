@@ -1,37 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { getAllGroupEvents } from '../services/groupeventsservice'; // Para obtener los grupos
-import { getAllJurors } from '../services/scoreservice'; // Para obtener los jurados
-import { addScore } from '../services/scoreservice'; // Para agregar un puntaje
+import { getAllGroupEvents } from '../services/groupeventsservice';
+import { getAllJurors, addScore } from '../services/scoreservice';
+import { HeaderNav } from '../components/HeaderNav';
 
 export function EventsJuradoPage() {
-    const [groups, setGroups] = useState([]); // Estado para los grupos
-    const [juror, setJuror] = useState(null); // Estado para el jurado actual
-    const [selectedGroup, setSelectedGroup] = useState(''); // Estado para el grupo seleccionado
-    const [score, setScore] = useState(''); // Estado para el puntaje
-    const [message, setMessage] = useState(''); // Mensaje de éxito o error
-    const [loading, setLoading] = useState(true); // Estado de carga
+    const [groups, setGroups] = useState([]);
+    const [juror, setJuror] = useState(null);
+    const [selectedGroup, setSelectedGroup] = useState('');
+    const [score, setScore] = useState('');
+    const [alert, setAlert] = useState({ message: '', type: '', visible: false });
+    const [loading, setLoading] = useState(true);
 
-    // Cargar datos de jurado y grupos al montar el componente
     useEffect(() => {
         const fetchJurorData = async () => {
             try {
-                const jurorData = await getAllJurors(); // Obtener los datos de los jurados
-                const currentJuror = jurorData.find(j => j.userId === JSON.parse(localStorage.getItem('user')).id); // Buscar al jurado actual
-                setJuror(currentJuror); // Establecer el jurado en el estado
+                const jurorData = await getAllJurors();
+                const currentJuror = jurorData.find(
+                    (j) => j.userId === JSON.parse(localStorage.getItem('user')).id
+                );
+                setJuror(currentJuror);
             } catch (error) {
-                setMessage('Error al cargar los jurados.');
+                showAlert('Error al cargar los jurados.', 'error');
                 setLoading(false);
             }
         };
 
         const fetchGroups = async () => {
             try {
-                const result = await getAllGroupEvents(); // Obtener grupos desde el backend
-                setGroups(result); // Establecer los grupos en el estado
-                setLoading(false); // Cambiar el estado de carga a falso
+                const result = await getAllGroupEvents();
+                setGroups(result);
+                setLoading(false);
             } catch (error) {
-                setMessage('Error al cargar los grupos.');
-                setLoading(false); // Cambiar el estado de carga a falso
+                showAlert('Error al cargar los grupos.', 'error');
+                setLoading(false);
             }
         };
 
@@ -39,69 +40,114 @@ export function EventsJuradoPage() {
         fetchGroups();
     }, []);
 
-    // Filtrar los grupos según el ID del evento del jurado
-    const filteredGroups = groups.filter(group => group.nameEvent === juror?.eventName);
+    const showAlert = (message, type) => {
+        setAlert({ message, type, visible: true });
+        setTimeout(() => setAlert((prev) => ({ ...prev, visible: false })), 3000);
+    };
 
-    // Función para manejar el envío del formulario
     const handleSubmit = async (event) => {
         event.preventDefault();
 
         if (!selectedGroup || !score) {
-            setMessage('Por favor, selecciona un grupo y asigna un puntaje.');
+            showAlert('Por favor, selecciona un grupo y asigna un puntaje.', 'error');
             return;
         }
 
         try {
-            const response = await addScore({ groupId: selectedGroup, score: parseInt(score, 10) }); // Llamar al servicio para agregar el puntaje
-            setMessage(response.message || 'Puntaje asignado correctamente.');
+            await addScore({ groupId: selectedGroup, score: parseInt(score, 10) });
+            showAlert('Puntaje asignado correctamente.', 'success');
         } catch (error) {
-            setMessage('Error al asignar el puntaje.');
+            showAlert('Error al asignar el puntaje.', 'error');
         }
     };
 
     return (
-        <div>
-            <h2>Agregar Puntaje</h2>
+        <div className="min-h-screen bg-gray-100">
+            <HeaderNav />
+            <div className="container mx-auto px-6 pt-28">
+                {/* Nombre del evento */}
+                {juror && (
+                    <h3 className="text-center text-4xl font-extrabold text-gray-800 mb-6">
+                        Evento: <span className="text-blue-600">{juror.eventName}</span>
+                    </h3>
+                )}
 
-            {loading && <p>Cargando grupos...</p>}
-            {message && <p>{message}</p>}
+                {/* Título */}
+                <h2 className="text-center text-3xl font-semibold text-gray-700 mb-10">
+                    Asignar Puntaje
+                </h2>
 
-            {!loading && (
-                <form onSubmit={handleSubmit}>
-                    {/* Selección del grupo */}
-                    <div>
-                        <label htmlFor="group">Seleccionar Grupo:</label>
-                        <select
-                            id="group"
-                            value={selectedGroup}
-                            onChange={(e) => setSelectedGroup(e.target.value)}
+                {/* Mensaje de éxito o error */}
+                {alert.visible && (
+                    <div
+                        className={`fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white transition-transform duration-500 ${
+                            alert.visible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+                        } ${alert.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}
+                    >
+                        {alert.message}
+                    </div>
+                )}
+
+                {loading ? (
+                    <p className="text-center text-lg text-gray-600">Cargando grupos...</p>
+                ) : (
+                    <form
+                        onSubmit={handleSubmit}
+                        className="max-w-4xl mx-auto bg-white p-10 rounded-xl shadow-lg hover:shadow-2xl transition-all"
+                    >
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Selección del grupo */}
+                            <div>
+                                <label htmlFor="group" className="block text-lg font-medium text-gray-700 mb-2">
+                                    Seleccionar Grupo
+                                </label>
+                                <select
+                                    id="group"
+                                    value={selectedGroup}
+                                    onChange={(e) => setSelectedGroup(e.target.value)}
+                                    className="w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                >
+                                    <option value="">Seleccionar un grupo</option>
+                                    {groups
+                                        .filter((group) => group.nameEvent === juror?.eventName)
+                                        .map((group) => (
+                                            <option key={group.groupId} value={group.groupId}>
+                                                {group.nameGroupEvent} - {group.nameEvent} ({group.nameDepartment})
+                                            </option>
+                                        ))}
+                                </select>
+                            </div>
+
+                            {/* Ingreso del puntaje */}
+                            <div>
+                                <label htmlFor="score" className="block text-lg font-medium text-gray-700 mb-2">
+                                    Puntaje
+                                </label>
+                                <input
+                                    type="number"
+                                    id="score"
+                                    value={score}
+                                    onChange={(e) => setScore(e.target.value)}
+                                    min="1"
+                                    max="10"
+                                    className="w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                    placeholder="Ingresa un puntaje (1-10)"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Botón para asignar puntaje */}
+                        <button
+                            type="submit"
+                            className="mt-8 w-full bg-blue-500 text-white py-3 rounded-lg shadow-md font-bold hover:bg-blue-600 transition-transform transform hover:scale-105"
                         >
-                            <option value="">Seleccionar un grupo</option>
-                            {filteredGroups.map((group) => (
-                                <option key={group.groupId} value={group.groupId}>
-                                    {group.nameGroupEvent} - {group.nameEvent} ({group.nameDepartment})
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Ingreso del puntaje */}
-                    <div>
-                        <label htmlFor="score">Puntaje:</label>
-                        <input
-                            type="number"
-                            id="score"
-                            value={score}
-                            onChange={(e) => setScore(e.target.value)}
-                            min="1"
-                            max="10"
-                        />
-                    </div>
-
-                    {/* Botón para enviar */}
-                    <button type="submit">Asignar Puntaje</button>
-                </form>
-            )}
+                            Asignar Puntaje
+                        </button>
+                    </form>
+                )}
+            </div>
         </div>
     );
 }
+
+export default EventsJuradoPage;
