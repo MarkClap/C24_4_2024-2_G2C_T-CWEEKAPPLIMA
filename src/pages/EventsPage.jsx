@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { HeaderNav } from '../components/HeaderNav';
+import { FooterComponent } from '../components/FooterComponent';
 import { getAllEvents } from '../services/eventservice';
 import inscriptionService from '../services/inscriptionservice';
 
@@ -172,6 +173,8 @@ export function EventsPage() {
                     ))}
                 </div>
             </div>
+            
+            <FooterComponent />
         </>
     );
 }
